@@ -2,25 +2,20 @@ import React from 'react';
 import { StyleSheet, View, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { 
     Container, 
+    Spinner,
     Header, 
     Title, 
     Content, 
-    Footer, 
-    FooterTab, 
-    Button, 
-    Left, 
-    Right, 
     Body, 
-    Icon,
     Form, 
     Item, 
     Input, 
-    CheckBox,
     ListItem,
     Label, 
     Text 
 } from 'native-base';
 import Todo from './components/Todo';
+import Footer from './components/TodoAppFooter';
 import AppNativeBase from './AppNativeBase';
 import { fetchTodos, updateTodos, addTodo, deleteTodo } from './services/TodosService';
 
@@ -31,7 +26,8 @@ export default class App extends React.Component {
         super(props);
         this.state = {
             todos: [],
-            isLoading: true
+            isLoading: true,
+            filter: 'all'
         };
         this.renderTodos = this.renderTodos.bind(this);
         this.setTodos = this.setTodos.bind(this);
@@ -39,6 +35,7 @@ export default class App extends React.Component {
         this.handleAddTodo = this.handleAddTodo.bind(this);
         this.onChangeTextHandler = this.onChangeTextHandler.bind(this);
         this.handleDeleteTodo = this.handleDeleteTodo.bind(this);
+        this.applyFilter = this.applyFilter.bind(this);
     }
 
     async componentWillMount() {
@@ -68,30 +65,32 @@ export default class App extends React.Component {
         updateTodos(updatedTodo).then(todos =>  this.setTodos(todos));
     }
 
-    __old__renderTodos() {
-        if (this.state.isLoading) return <ActivityIndicator />;
-
-        return this.state.todos.map((todo, index) => (
-            <Todo 
-                key={index}
-                todo={todo}
-                handleCheckUncheck={this.handleCheckUncheck}
-                handleDeleteTodo={this.handleDeleteTodo}
-            />
-        )).reverse();
+    applyFilter(filter='all') {
+        this.setState({filter});
     }
-    
-    renderTodos() {
-        if (this.state.isLoading) return <ActivityIndicator />;
 
-        return this.state.todos.map((todo, index) => (
-            <Todo 
-                key={index}
-                todo={todo}
-                handleCheckUncheck={this.handleCheckUncheck}
-                handleDeleteTodo={this.handleDeleteTodo}
-            />
-        )).reverse();
+    renderTodos() {
+        
+
+        return this.state.todos
+            .filter(todo => {
+                if (this.state.filter === 'complete') {
+                    return todo.isComplete;
+                } 
+                else if (this.state.filter === 'pending') {
+                    return !todo.isComplete;
+                } 
+                return todo;
+            })
+            .map((todo, index) => (
+                <Todo 
+                    key={index}
+                    todo={todo}
+                    handleCheckUncheck={this.handleCheckUncheck}
+                    handleDeleteTodo={this.handleDeleteTodo}
+                />
+            ))
+            .reverse();
     }
 
     handleAddTodo() {
@@ -121,30 +120,6 @@ export default class App extends React.Component {
         this.setState(prevState => ({...prevState, text }));
     }
 
-    __old__render() {
-        return <AppNativeBase/>;
-        return (
-            <View style={styles.container}>
-                <View style={[styles.fullWidth, isAndroid ? styles.border : '']}>
-                    <TextInput
-                        style={styles.textInput}
-                        placeholder="Enter a new todo"
-                        value={this.state.text}
-                        onChangeText={this.onChangeTextHandler}
-                        onSubmitEditing={this.handleAddTodo}
-                        returnKeyType="done"
-                        autoCorrect={false}
-                        returnKeyLabel="Add Todo"
-                    />
-                </View>
-                        
-                <View style={{marginTop: 10, flex: 1}}>
-                    {this.renderTodos()}
-                </View>
-            </View>
-        );
-    }
-
     render() {
         return (
             <Container>
@@ -153,78 +128,34 @@ export default class App extends React.Component {
                         <Title>Todo App</Title>
                     </Body>
                 </Header>
-                <Content>
-                    <Form>
-                        <Item floatingLabel>
-                            <Label>Enter a todo</Label>
-                            <Input 
-                                value={this.state.text}
-                                onChangeText={this.onChangeTextHandler}
-                                onSubmitEditing={this.handleAddTodo}
-                                returnKeyType="done"
-                                autoCorrect={false}/>
-                        </Item>
-                    </Form>
-                    {/* <ListItem>
-                        <CheckBox checked={true} />
-                        <Body>
-                            <Text>Daily Stand Up</Text>
-                        </Body>
-                    </ListItem>
-                    <ListItem>
-                        <CheckBox checked={false} />
-                        <Body>
-                            <Text>Discussion with Client</Text>
-                        </Body>
-                    </ListItem> */}
 
-                    {this.renderTodos()}
-
-                </Content>
-                <Footer>
-                    <FooterTab>
-                        <Button full>
-                            <Text>Footer</Text>
-                        </Button>
-                    </FooterTab>
-                </Footer>
+                {this.state.isLoading && 
+                    <Spinner />
+                }
+                
+                {!this.state.isLoading && 
+                    <React.Fragment>
+                        <Content>
+                            <Form>
+                                <Item floatingLabel>
+                                    <Label>Enter a todo</Label>
+                                    <Input
+                                        value={this.state.text}
+                                        onChangeText={this.onChangeTextHandler}
+                                        onSubmitEditing={this.handleAddTodo}
+                                        returnKeyType="done"
+                                        autoCorrect={false} />
+                                </Item>
+                            </Form>
+                            {this.renderTodos()}
+                        </Content>
+                        <Footer
+                            filter={this.state.filter}
+                            applyFilter={this.applyFilter}/>
+                    </React.Fragment>
+                }
+                
             </Container>
         )
     }
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFF',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        top: 20,
-        padding:20
-    },
-    text: {
-        color: '#fff'        
-    },
-    fullWidth: {
-        width: '100%'
-    },
-    border: {
-        borderTopColor: '#000',
-        borderRightColor: '#000',
-        borderBottomColor: '#000',
-        borderLeftColor: '#000',
-
-        borderTopWidth: 1,
-        borderRightWidth: 1,
-        borderBottomWidth: 1,
-        borderLeftWidth: 1,
-    },
-    textInput: {
-        height: 40,
-        paddingRight: 10,
-        paddingLeft: 10,
-        borderColor: "gray",
-        borderWidth: isAndroid ? 0 : 1,
-        width: "100%"
-    }
-});
