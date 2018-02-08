@@ -1,3 +1,5 @@
+import { database } from '../App';
+
 let todos = [
     {
         _id: 1,
@@ -16,30 +18,34 @@ let todos = [
     }
 ];
 
-export function fetchTodos() {
-    return Promise.resolve(todos);
-}
-
 export function updateTodos(updatedTodo) {
     const updatedTodos = todos.map(todo => {
         if (todo._id === updatedTodo._id) return updatedTodo;
         return todo;
     });
-    todos = updatedTodos;
-
-    return Promise.resolve(todos)
+    const referenceToTodo = database.ref(`todos/${updatedTodo._id}`);
+    
+    referenceToTodo.set({
+        title: updatedTodo.title,
+        isComplete: updatedTodo.isComplete
+    });
 }
 
 export function addTodo(newTodo) {
     const updatedTodos = [...todos, newTodo];
     todos = updatedTodos;
+    
+    const todoListRef = database.ref('todos');
+    const newTodoRef = todoListRef.push();
+    
+    return newTodoRef.set({
+        ...newTodo
+    });
 
-    return Promise.resolve(todos)
 }
 
 export function deleteTodo(todoToDelete) {
-    const updatedTodos = todos.filter(todo => todo._id !== todoToDelete._id);
-    todos = updatedTodos;
+    const referenceToTodo = database.ref(`todos/${todoToDelete._id}`);
 
-    return Promise.resolve(todos)
+    return referenceToTodo.remove();
 }
