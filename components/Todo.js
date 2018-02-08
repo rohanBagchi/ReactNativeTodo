@@ -1,20 +1,39 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import CheckBox from 'react-native-checkbox';
+import { Text } from "react-native";
+import {
+    Body,
+    CheckBox,
+    ListItem,
+} from 'native-base';
 
-export default function Todo({title, isComplete}) {
+export default function Todo({ todo, handleCheckUncheck, handleDeleteTodo }) {
+    const { title, isComplete } = todo;
+    const labelStyle = isComplete ? styles.complete : '';
     return (
-        <CheckBox
-            style={styles.text}
-            label={title}
-            checked={isComplete}
-            onChange={(checked) => console.log('I am checked', checked)}
-        />
+        <ListItem>
+            <CheckBox 
+                onPress={() => handleCheckUncheck(todo, isComplete)}
+                checked={isComplete} />
+            <Body>
+                <Text
+                    onPress={() => handleCheckUncheck(todo, isComplete)}
+                    style={[styles.textStyle, labelStyle]}>
+                    {title}
+                </Text>
+            </Body>
+        </ListItem>
     );
 }
 
-const styles = StyleSheet.create({
-    text: {
-        color: '#fff'
+const styles = {
+    textStyle: {
+        left: 10
+    },
+    pending: {
+        color: '#000'
+    },
+    complete: {
+        textDecorationLine: 'line-through',
+        color: '#d8d8d8'
     }
-});
+};
