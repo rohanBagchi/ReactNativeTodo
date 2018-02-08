@@ -1,6 +1,27 @@
 import React from 'react';
-import { StyleSheet, Text, View, TextInput, Button, ActivityIndicator, Platform } from 'react-native';
+import { StyleSheet, View, TextInput, ActivityIndicator, Platform } from 'react-native';
+import { 
+    Container, 
+    Header, 
+    Title, 
+    Content, 
+    Footer, 
+    FooterTab, 
+    Button, 
+    Left, 
+    Right, 
+    Body, 
+    Icon,
+    Form, 
+    Item, 
+    Input, 
+    CheckBox,
+    ListItem,
+    Label, 
+    Text 
+} from 'native-base';
 import Todo from './components/Todo';
+import AppNativeBase from './AppNativeBase';
 import { fetchTodos, updateTodos, addTodo, deleteTodo } from './services/TodosService';
 
 const isAndroid = Platform.OS == "android";
@@ -18,6 +39,13 @@ export default class App extends React.Component {
         this.handleAddTodo = this.handleAddTodo.bind(this);
         this.onChangeTextHandler = this.onChangeTextHandler.bind(this);
         this.handleDeleteTodo = this.handleDeleteTodo.bind(this);
+    }
+
+    async componentWillMount() {
+        await Expo.Font.loadAsync({
+            'Roboto': require('native-base/Fonts/Roboto.ttf'),
+            'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
+        });
     }
 
     componentDidMount() {
@@ -40,6 +68,19 @@ export default class App extends React.Component {
         updateTodos(updatedTodo).then(todos =>  this.setTodos(todos));
     }
 
+    __old__renderTodos() {
+        if (this.state.isLoading) return <ActivityIndicator />;
+
+        return this.state.todos.map((todo, index) => (
+            <Todo 
+                key={index}
+                todo={todo}
+                handleCheckUncheck={this.handleCheckUncheck}
+                handleDeleteTodo={this.handleDeleteTodo}
+            />
+        )).reverse();
+    }
+    
     renderTodos() {
         if (this.state.isLoading) return <ActivityIndicator />;
 
@@ -80,7 +121,8 @@ export default class App extends React.Component {
         this.setState(prevState => ({...prevState, text }));
     }
 
-    render() {
+    __old__render() {
+        return <AppNativeBase/>;
         return (
             <View style={styles.container}>
                 <View style={[styles.fullWidth, isAndroid ? styles.border : '']}>
@@ -101,6 +143,53 @@ export default class App extends React.Component {
                 </View>
             </View>
         );
+    }
+
+    render() {
+        return (
+            <Container>
+                <Header>
+                    <Body>
+                        <Title>Todo App</Title>
+                    </Body>
+                </Header>
+                <Content>
+                    <Form>
+                        <Item floatingLabel>
+                            <Label>Enter a todo</Label>
+                            <Input 
+                                value={this.state.text}
+                                onChangeText={this.onChangeTextHandler}
+                                onSubmitEditing={this.handleAddTodo}
+                                returnKeyType="done"
+                                autoCorrect={false}/>
+                        </Item>
+                    </Form>
+                    {/* <ListItem>
+                        <CheckBox checked={true} />
+                        <Body>
+                            <Text>Daily Stand Up</Text>
+                        </Body>
+                    </ListItem>
+                    <ListItem>
+                        <CheckBox checked={false} />
+                        <Body>
+                            <Text>Discussion with Client</Text>
+                        </Body>
+                    </ListItem> */}
+
+                    {this.renderTodos()}
+
+                </Content>
+                <Footer>
+                    <FooterTab>
+                        <Button full>
+                            <Text>Footer</Text>
+                        </Button>
+                    </FooterTab>
+                </Footer>
+            </Container>
+        )
     }
 }
 

@@ -1,8 +1,14 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
-import CheckBox from 'react-native-checkbox';
+import { StyleSheet, View, Button } from 'react-native';
+import {
+    Body,
+    CheckBox,
+    ListItem,
+    Text
+} from 'native-base';
+// import CheckBox from 'react-native-checkbox';
 
-export default function Todo({ todo, handleCheckUncheck, handleDeleteTodo }) {
+function ___Todo({ todo, handleCheckUncheck, handleDeleteTodo }) {
     const { title, isComplete } = todo;
     const labelStyle = isComplete ? styles.complete : styles.pending;
     return (
@@ -16,6 +22,23 @@ export default function Todo({ todo, handleCheckUncheck, handleDeleteTodo }) {
             />
             <Button title="X" onPress={() => handleDeleteTodo(todo)} />
         </View>
+    );
+}
+
+export default function Todo({ todo, handleCheckUncheck, handleDeleteTodo }) {
+    const { title, isComplete } = todo;
+    const labelStyle = isComplete ? styles.complete : styles.pending;
+    return (
+        <ListItem>
+            <CheckBox 
+                onPress={() => handleCheckUncheck(todo, isComplete)}
+                checked={isComplete} />
+            <Body>
+                <Text style={labelStyle}>
+                    {title}
+                </Text>
+            </Body>
+        </ListItem>
     );
 }
 
