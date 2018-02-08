@@ -45,8 +45,9 @@ export default class App extends React.Component {
         });
     }
 
-    componentDidMount() {
-        fetchTodos().then(todos => this.setTodos(todos))
+    async componentDidMount() {
+        const todos = await fetchTodos();
+        await this.setTodos(todos);
     }
 
     setTodos(todos, clearNewTodoText) {
@@ -57,12 +58,13 @@ export default class App extends React.Component {
         });
     }
 
-    handleCheckUncheck(todo, checked) {
+    async handleCheckUncheck(todo, checked) {
         const updatedTodo = {
             ...todo,
             isComplete: !checked
         };
-        updateTodos(updatedTodo).then(todos =>  this.setTodos(todos));
+        const todos = await updateTodos(updatedTodo);
+        await this.setTodos(todos);
     }
 
     applyFilter(filter='all') {
@@ -70,8 +72,6 @@ export default class App extends React.Component {
     }
 
     renderTodos() {
-        
-
         return this.state.todos
             .filter(todo => {
                 if (this.state.filter === 'complete') {
@@ -93,7 +93,7 @@ export default class App extends React.Component {
             .reverse();
     }
 
-    handleAddTodo() {
+    async handleAddTodo() {
         if (!this.state.text.trim().length) return;
         const newTodo = {
             _id: Math.random() * 100,
@@ -101,19 +101,19 @@ export default class App extends React.Component {
             isComplete: false
         };
 
-        addTodo(newTodo).then(todos => {
-            this.setState(prevState => {
-                return {
-                    ...prevState,
-                    todos: this.state.todos.concat(newTodo),
-                    text: ''
-                };
-            })
+        const todos = await addTodo(newTodo);
+        await this.setState(prevState => {
+            return {
+                ...prevState,
+                todos: this.state.todos.concat(newTodo),
+                text: ''
+            };
         });
     }
 
-    handleDeleteTodo(todo) {
-        deleteTodo(todo).then(todos => this.setTodos(todos));
+    async handleDeleteTodo(todo) {
+        const todos = await deleteTodo(todo);
+        await this.setTodos(todos);
     }
 
     onChangeTextHandler(text) {
