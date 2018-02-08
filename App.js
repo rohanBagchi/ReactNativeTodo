@@ -1,5 +1,13 @@
 import React from 'react';
-import { StyleSheet, View, TextInput, ActivityIndicator, Platform } from 'react-native';
+import firebase from 'firebase'
+import { 
+    Alert, 
+    StyleSheet, 
+    View, 
+    TextInput, 
+    ActivityIndicator, 
+    Platform 
+} from 'react-native';
 import { 
     Container, 
     Spinner,
@@ -20,6 +28,18 @@ import AppNativeBase from './AppNativeBase';
 import { fetchTodos, updateTodos, addTodo, deleteTodo } from './services/TodosService';
 
 const isAndroid = Platform.OS == "android";
+var config = {
+    apiKey: "AIzaSyBj7IFF3FfPcTBX_XtTNnT0eBeCTLHN8XQ",
+    authDomain: "react-native-todo-dc2c6.firebaseapp.com",
+    databaseURL: "https://react-native-todo-dc2c6.firebaseio.com",
+    projectId: "react-native-todo-dc2c6",
+    storageBucket: "react-native-todo-dc2c6.appspot.com",
+    messagingSenderId: "314408015539"
+};
+firebase.initializeApp(config);
+
+export const firebase_ref = firebase;
+export const database = firebase.database();
 
 export default class App extends React.Component {
     constructor(props) {
@@ -43,28 +63,35 @@ export default class App extends React.Component {
             'Roboto': require('native-base/Fonts/Roboto.ttf'),
             'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
         });
-    }
 
-    async componentDidMount() {
-        const todos = await fetchTodos();
-        await this.setTodos(todos);
-    }
-
-    setTodos(todos, clearNewTodoText) {
-        this.setState({
-            todos,
-            text: clearNewTodoText ? '' : this.state.text,
-            isLoading: false
+        database.ref('todos').on('value', snapShot => {
+            const dbSnapShot = snapShot.val();
+            const keys = Object.keys(dbSnapShot);
+            const todos = keys.map(k => {
+                return {
+                    ...dbSnapShot[k],
+                    _id: k
+                };
+            });
+            this.setTodos(todos);
         });
     }
 
-    async handleCheckUncheck(todo, checked) {
+    setTodos(todos, clearNewTodoText) {
+        this.setState(prevState => ({
+            ...prevState,
+            todos,
+            text: clearNewTodoText ? '' : this.state.text,
+            isLoading: false
+        }));
+    }
+
+    handleCheckUncheck(todo, checked) {
         const updatedTodo = {
             ...todo,
             isComplete: !checked
         };
-        const todos = await updateTodos(updatedTodo);
-        await this.setTodos(todos);
+        const todos = updateTodos(updatedTodo);
     }
 
     applyFilter(filter='all') {
@@ -82,9 +109,9 @@ export default class App extends React.Component {
                 } 
                 return todo;
             })
-            .map((todo, index) => (
+            .map(todo => (
                 <Todo 
-                    key={index}
+                    key={todo._id}
                     todo={todo}
                     handleCheckUncheck={this.handleCheckUncheck}
                     handleDeleteTodo={this.handleDeleteTodo}
@@ -93,27 +120,27 @@ export default class App extends React.Component {
             .reverse();
     }
 
-    async handleAddTodo() {
+    handleAddTodo() {
         if (!this.state.text.trim().length) return;
         const newTodo = {
-            _id: Math.random() * 100,
             title: this.state.text,
             isComplete: false
         };
-
-        const todos = await addTodo(newTodo);
-        await this.setState(prevState => {
-            return {
-                ...prevState,
-                todos: this.state.todos.concat(newTodo),
-                text: ''
-            };
-        });
+        this.setState(prevState => ({
+            ...prevState,
+            text: ''
+        }), () => addTodo(newTodo));
     }
 
-    async handleDeleteTodo(todo) {
-        const todos = await deleteTodo(todo);
-        await this.setTodos(todos);
+    handleDeleteTodo(todo) {
+        Alert.alert(
+            'Deleting Todo',
+            todo.title,
+            [
+                { text: 'Confirm?', onPress: () => deleteTodo(todo) },
+                { text: 'Cancel', onPress: () => console.log(todo.title), style: 'cancel' }
+            ]
+        );
     }
 
     onChangeTextHandler(text) {
